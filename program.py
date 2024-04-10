@@ -10,7 +10,7 @@ import re
 
 
 
-def text_to_word_list(file_path, separator = ' '):
+def text_to_word_list(file_path, separator = ' ') -> list:
     try:
         #opens the file for reading
         with open(file_path, 'r') as file:
@@ -77,7 +77,7 @@ def translate_word(word, source_language='sv', target_language='en'):
 #     except Exception as e:
 #         print(f"Error occurred while translating and exporting CSV: {e}")
 
-def translate_swedish_words_to_english(source_list):
+def translate_swedish_words_to_english(source_list) -> list:
     translated_list = []
     for word in source_list:
         try:
@@ -108,16 +108,16 @@ def combine_csv(file1, file2) -> str:
     df_append.to_csv(deck_name, index = False)
     return deck_name
 
-def create_anki_deck(filename):
+def create_anki_deck(target_list, native_list):
 
     #import files
-    data = pd.read_csv(filename)
-    df = pd.DataFrame(data)
-    sw = df['0'].tolist()
-    eng = df['1'].tolist()
+    # data = pd.read_csv(filename)
+    # df = pd.DataFrame(data)
+    # sw = df['0'].tolist()
+    # eng = df['1'].tolist()
 
     my_model_1 = genanki.Model(
-    1380120064,
+    13110120064,
     'Example',
     fields=[
         {'name': 'English'},
@@ -132,55 +132,43 @@ def create_anki_deck(filename):
         },
     ])
 
-    my_model_2 = genanki.Model(
-    1380120164,
-    'Example',
-    fields=[
-        {'name': 'English'},
-        {'name': 'Swedish'},
-    ],
-    templates=[
-        {
-        'name': 'Card 1',
-        'qfmt': '{{English}}',
-        'afmt': '{{FrontSide}}<hr id="answer">{{Swedish}}',
-        },
-    ])
-    
-
     my_deck= genanki.Deck(
-    2059400210,
-    'Anki sound deck TWISTED APR 10 2:26 PM')
+    2059454210,
+    'HARRY P APR 10 10:57 PM')
 
-    for w in sw:
-        speak = gTTS(text=w, lang='sv', slow=False) 
+    for word in target_list:
+        speak = gTTS(text=word, lang='sv', slow=False) 
         #print("Text to be spoken:", w)
-        if not w[0].isalpha():
+        if not word[0].isalpha():
             continue
         else:
-            speak.save("sounds/"+w+".mp3")
+            speak.save("sounds/"+word+".mp3")
 
     my_package = genanki.Package(my_deck)
 
     missing = 0
 
-    for e, s in zip(eng, sw):
-        if type(e) == float or type(s) == float:
+    #e = native_word
+    #s = target_word
+
+    for native_word, target_word in zip(native_list, target_list):
+        if type(native_word) == float or type(target_word) == float:
             continue
         else:
+            #print(f"i am in create an ki  where native is : {native_word} and target is {target_word}")
             #check to see if the sound file exists
-            if os.path.isfile('sounds/'+s+'.mp3'):
+            if os.path.isfile('sounds/'+target_word+'.mp3'):
                 #print (f"YES-{s}.mp3 does exist")
                 my_note = genanki.Note(
                     model = my_model_1,
-                    fields=[e, s, '[sound:' +s +'.mp3' ']'])
+                    fields=[native_word, target_word, '[sound:' +target_word +'.mp3' ']'])
                 my_deck.add_note(my_note)
             else:
-                print (f"NO-{s}.mp3 does NOT exist")
+                print (f"NO-{target_word}.mp3 does NOT exist")
                 missing += 1
                 my_note = genanki.Note(
                     model = my_model_1,
-                    fields=[e, s, 'audio does not exist'])
+                    fields=[native_word, target_word, 'audio does not exist'])
                 my_deck.add_note(my_note)
     print(f"{missing} files missing")
             
@@ -194,12 +182,13 @@ def create_anki_deck(filename):
 
     file_path = 'sounds/'
     med = []
-    for file in sw:
-        if os.path.isfile(file):
-            full_file = file_path + file +".mp3" 
-            #print("file name is: ", full_file)
+    for file in target_list:
+        full_file = file_path + file +".mp3"
+        if os.path.isfile(full_file): 
+            print("file name is: ", full_file)
             med.append(full_file)
         else:
+            print(f"{full_file} not found")
             continue
     
     #print(med)
@@ -207,7 +196,7 @@ def create_anki_deck(filename):
 
 
     try:
-        my_package.write_to_file('sentences/iiiitwisted_love_sentences.apkg')
+        my_package.write_to_file('sentences/swe_eng.apkg')
     except FileNotFoundError as fe:
         print(f"file not found when trying to write: '{fe}' ")
 
@@ -218,18 +207,17 @@ def main() -> None:
     
 
     #1. import the file - txt 
-    file_path = 'twisted_ch1.txt'
+    file_path = 'hp_ch1.txt'
     
     #2. convert the txt to a list based on separator (where the default is ' ')
-    words = text_to_word_list(file_path)
+    target_word_list = text_to_word_list(file_path)
     #3. put the word list to csv 
-    list_to_csv(words, 'sentences/twisted_sentences_swed.csv')
     #4. Translate swed words to engl
-    translate_swedish_words_to_english('sentences/twisted_sentences_swed.csv', 'sentences/twisted_sentences_eng.csv')
+    native_word_list = translate_swedish_words_to_english(target_word_list)
     #5.combine the csv files to one 
-    deck_as_csv = combine_csv('sentences/twisted_sentences_swed.csv', 'sentences/twisted_sentences_eng.csv')
+    # deck_as_csv = combine_csv(target_word_list, native_word_list)
     #6. Create an anki deck 
-    create_anki_deck(deck_as_csv)
+    create_anki_deck(target_word_list, native_word_list)
         
 
 
