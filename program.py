@@ -2,7 +2,7 @@ import csv
 from googletrans import Translator
 import pandas as pd 
 import genanki 
-import os
+import os.path
 import glob
 import warnings
 from gtts import gTTS 
@@ -18,7 +18,10 @@ def text_to_word_list(file_path, separator = ' '):
             # Split the text into words using whitespace as separator
             word_list = text.split(sep = separator)
             for n in range(len(word_list)):
-                new_word = re.sub(r"\W", "", word_list[n])
+                if separator == ' ':
+                    new_word = re.sub(r"\W", "", word_list[n])
+                elif separator == '.':
+                    new_word = re.sub(r"^ |[^\w\s]", "", word_list[n])
                 word_list[n] = new_word
             #remove duplicates
             word_list = [i for i in word_list if i != '']
@@ -55,24 +58,41 @@ def translate_word(word, source_language='sv', target_language='en'):
         return ''  # or return the original word or any other default value
 
 
-def translate_swedish_words_to_english(input_file, output_file):
+# def translate_swedish_words_to_english(input_file, output_file):
+#     try:
+#         with open(input_file, 'r', newline='') as csv_in, open(output_file, 'w', newline='') as csv_out:
+#             reader = csv.reader(csv_in)
+#             writer = csv.writer(csv_out)
+#             for row in reader:
+#                 translated_row = []
+#                 for word in row:
+#                     try:
+#                         translated_word = translate_word(word, source_language='sv', target_language='en')
+#                         translated_row.append(translated_word)
+#                     except Exception as e:
+#                         print(f"Translation failed for word: {word}. Error: {e}")
+#                         translated_row.append('')  # Append an empty string as translation
+#                 writer.writerow(translated_row)
+#         print(f"Translations successfully exported to {output_file}")
+#     except Exception as e:
+#         print(f"Error occurred while translating and exporting CSV: {e}")
+
+def translate_swedish_words_to_english(source_list):
+    translated_list = []
+    for word in source_list:
+        try:
+            translated_word = translate_word(word, source_language= 'sv', target_language='en')
+            translated_list.append(translated_word)
+        except Exception as e:
+            print(f"Translation failed for word: {word}. Error: {e}")
+            translated_list.append('')  # Append an empty string as translation
     try:
-        with open(input_file, 'r', newline='') as csv_in, open(output_file, 'w', newline='') as csv_out:
-            reader = csv.reader(csv_in)
-            writer = csv.writer(csv_out)
-            for row in reader:
-                translated_row = []
-                for word in row:
-                    try:
-                        translated_word = translate_word(word, source_language='sv', target_language='en')
-                        translated_row.append(translated_word)
-                    except Exception as e:
-                        print(f"Translation failed for word: {word}. Error: {e}")
-                        translated_row.append('')  # Append an empty string as translation
-                writer.writerow(translated_row)
-        print(f"Translations successfully exported to {output_file}")
+        print(f"Translations successfully exported to list")
+        return translated_list
     except Exception as e:
-        print(f"Error occurred while translating and exporting CSV: {e}")
+        print("Error in translating your list. An empty list is returned.")
+        return []
+
 
 
 def combine_csv(file1, file2) -> str:
@@ -96,7 +116,7 @@ def create_anki_deck(filename):
     sw = df['0'].tolist()
     eng = df['1'].tolist()
 
-    my_model = genanki.Model(
+    my_model_1 = genanki.Model(
     1380120064,
     'Example',
     fields=[
@@ -111,11 +131,26 @@ def create_anki_deck(filename):
         'afmt': '{{FrontSide}}<hr id="answer">{{Swedish}}{{Swedish_Audio}}',
         },
     ])
+
+    my_model_2 = genanki.Model(
+    1380120164,
+    'Example',
+    fields=[
+        {'name': 'English'},
+        {'name': 'Swedish'},
+    ],
+    templates=[
+        {
+        'name': 'Card 1',
+        'qfmt': '{{English}}',
+        'afmt': '{{FrontSide}}<hr id="answer">{{Swedish}}',
+        },
+    ])
     
 
     my_deck= genanki.Deck(
     2059400210,
-    'Anki sound deck TWISTED')
+    'Anki sound deck TWISTED APR 10 2:26 PM')
 
     for w in sw:
         speak = gTTS(text=w, lang='sv', slow=False) 
@@ -127,14 +162,29 @@ def create_anki_deck(filename):
 
     my_package = genanki.Package(my_deck)
 
+    missing = 0
+
     for e, s in zip(eng, sw):
         if type(e) == float or type(s) == float:
             continue
         else:
-            my_note = genanki.Note(
-                model = my_model,
-                fields=[e, s, '[sound:' +s +'.mp3' ']'])
-            my_deck.add_note(my_note)
+            #check to see if the sound file exists
+            if os.path.isfile('sounds/'+s+'.mp3'):
+                #print (f"YES-{s}.mp3 does exist")
+                my_note = genanki.Note(
+                    model = my_model_1,
+                    fields=[e, s, '[sound:' +s +'.mp3' ']'])
+                my_deck.add_note(my_note)
+            else:
+                print (f"NO-{s}.mp3 does NOT exist")
+                missing += 1
+                my_note = genanki.Note(
+                    model = my_model_1,
+                    fields=[e, s, 'audio does not exist'])
+                my_deck.add_note(my_note)
+    print(f"{missing} files missing")
+            
+            
     # print(my_deck)
     warnings.filterwarnings('ignore', module='genanki', message='^Field contained the following invalid HTML tags')
     
@@ -145,9 +195,12 @@ def create_anki_deck(filename):
     file_path = 'sounds/'
     med = []
     for file in sw:
-        full_file = file_path + file +".mp3" 
-        #print("file name is: ", full_file)
-        med.append(full_file)
+        if os.path.isfile(file):
+            full_file = file_path + file +".mp3" 
+            #print("file name is: ", full_file)
+            med.append(full_file)
+        else:
+            continue
     
     #print(med)
     my_package.media_files = med
