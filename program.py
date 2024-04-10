@@ -1,12 +1,15 @@
+#!/usr/bin/env python3
+""" Anki Card Generator """
+
 import csv
 from googletrans import Translator
-import pandas as pd 
 import genanki 
 import os.path
-import glob
 import warnings
 from gtts import gTTS 
 import re
+import argparse
+from typing import NamedTuple, TextIO
 
 
 
@@ -57,26 +60,6 @@ def translate_word(word, source_language='sv', target_language='en'):
         print(f"Translation failed for word: {word}")
         return ''  # or return the original word or any other default value
 
-
-# def translate_swedish_words_to_english(input_file, output_file):
-#     try:
-#         with open(input_file, 'r', newline='') as csv_in, open(output_file, 'w', newline='') as csv_out:
-#             reader = csv.reader(csv_in)
-#             writer = csv.writer(csv_out)
-#             for row in reader:
-#                 translated_row = []
-#                 for word in row:
-#                     try:
-#                         translated_word = translate_word(word, source_language='sv', target_language='en')
-#                         translated_row.append(translated_word)
-#                     except Exception as e:
-#                         print(f"Translation failed for word: {word}. Error: {e}")
-#                         translated_row.append('')  # Append an empty string as translation
-#                 writer.writerow(translated_row)
-#         print(f"Translations successfully exported to {output_file}")
-#     except Exception as e:
-#         print(f"Error occurred while translating and exporting CSV: {e}")
-
 def translate_swedish_words_to_english(source_list) -> list:
     translated_list = []
     for word in source_list:
@@ -93,28 +76,9 @@ def translate_swedish_words_to_english(source_list) -> list:
         print("Error in translating your list. An empty list is returned.")
         return []
 
-
-
-def combine_csv(file1, file2) -> str:
-    df1 = pd.read_csv(file1)
-    df2 = pd.read_csv(file2)
-
-    df_append = pd.DataFrame()
-    csv_files = [df1, df2]
-    for file in csv_files:
-        df_append = pd.concat([df_append, file], ignore_index= True, axis = 1)
-    
-    deck_name = 'sentences/sentence_deck.csv'
-    df_append.to_csv(deck_name, index = False)
-    return deck_name
+# --------------------------------------------------
 
 def create_anki_deck(target_list, native_list):
-
-    #import files
-    # data = pd.read_csv(filename)
-    # df = pd.DataFrame(data)
-    # sw = df['0'].tolist()
-    # eng = df['1'].tolist()
 
     my_model_1 = genanki.Model(
     13110120064,
@@ -200,7 +164,29 @@ def create_anki_deck(target_list, native_list):
     except FileNotFoundError as fe:
         print(f"file not found when trying to write: '{fe}' ")
 
+# --------------------------------------------------
 
+class Args(NamedTuple):
+    """ Command-line arguments """
+    txt: str
+
+# --------------------------------------------------
+def get_args() -> Args:
+    """ Get command-line arguments """
+
+    parser = argparse.ArgumentParser(
+        description='Tetranucleotide frequency',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    #because there is no default, then it must have a value
+    parser.add_argument('txt', metavar='TXT', help='Input text file of target language')
+
+    args = parser.parse_args()
+
+    if os.path.isfile(args.txt):
+        args.txt = open(args.txt).read().rstrip()
+
+    return Args(args.txt)
 # --------------------------------------------------
 def main() -> None:
     """ Make a jazz noise here """
