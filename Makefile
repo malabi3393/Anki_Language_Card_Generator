@@ -7,4 +7,4 @@ clean_apkg:
 	rm -r sentences/*.apkg
 
 install:
-	python3 -m pip install -r requirements.txt
+	python3 -m pip install -r src/requirements.txt
