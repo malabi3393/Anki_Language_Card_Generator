@@ -168,18 +168,35 @@ def create_anki_deck(target_list, native_list):
 
 class Args(NamedTuple):
     """ Command-line arguments """
-    txt: str
+    txt: TextIO
+    target_lng: str
+    native_lng: str
 
 # --------------------------------------------------
 def get_args() -> Args:
     """ Get command-line arguments """
 
     parser = argparse.ArgumentParser(
-        description='Tetranucleotide frequency',
+        description='Anki Card Generator',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     #because there is no default, then it must have a value
-    parser.add_argument('txt', metavar='TXT', help='Input text file of target language')
+    parser.add_argument('txt', metavar='FILE', help='Input text file of target language',
+                        type=argparse.FileType('rt'))
+    parser.add_argument('-t',
+                        '--tar',
+                        help='The target language (the language of the text file).' \
+                        ' Note: must be written in ISO 639 format. For example:\nArabic: ar\n' \
+                        'English: en\nSwedish: sv\nMore can be found at https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes',
+                        type=str)
+    parser.add_argument('-n',
+                    '--nat',
+                    help='The native language (the language that the text file will be translated into).' \
+                    ' Note: must be written in ISO 639 format. For example:\nArabic: ar\n' \
+                    'English: en\nSwedish: sv\nMore can be found at https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes\n' \
+                    'Default is English',
+                    type=str,
+                    default='en')
 
     args = parser.parse_args()
 
