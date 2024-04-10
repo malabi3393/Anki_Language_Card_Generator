@@ -1,4 +1,0 @@
-List successfully exported to sentences/twisted_sentences_swed.csv
-Translation failed for word: . Error: 'NoneType' object is not iterable
-Translations successfully exported to sentences/twisted_sentences_eng.csv
-we are fine here

@@ -29,3 +29,7 @@ translated_row = []
 # test = translate_word(word, source_language='sv', target_language='en')
 speak = gTTS(text=word, lang='sv', slow=False) 
 speak.save("captured_voice.mp3")
+
+for w in list:
+    speak = gTTS(text=w, lang='sv', slow=False) 
+    speak.save("sounds/"+w+".mp3")

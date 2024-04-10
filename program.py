@@ -4,6 +4,11 @@ import pandas as pd
 import genanki 
 import os
 import glob
+import warnings
+from gtts import gTTS 
+import re
+
+
 
 def text_to_word_list(file_path, sepa = ' '):
     ch = [',', '.', '"', '”']
@@ -18,6 +23,13 @@ def text_to_word_list(file_path, sepa = ' '):
             word_list = [w.replace(',', '') for w in word_list]
             word_list = [w.replace('”', '') for w in word_list]
             word_list = list(dict.fromkeys(word_list))
+        
+        for word in word_list:
+            is_word = True
+            for letter in word:
+
+
+        
         return word_list
     except FileNotFoundError:
         print("File not found.")
@@ -85,30 +97,80 @@ def create_anki_deck(filename):
     #import files
     data = pd.read_csv(filename)
     df = pd.DataFrame(data)
-    eng = df['0'].tolist()
-    sw = df['1'].tolist()
+    sw = df['0'].tolist()
+    eng = df['1'].tolist()
 
+    my_model = genanki.Model(
+    1380120064,
+    'Example',
+    fields=[
+        {'name': 'English'},
+        {'name': 'Swedish'},
+        {'name': 'Swedish_Audio'}
+    ],
+    templates=[
+        {
+        'name': 'Card 1',
+        'qfmt': '{{English}}',
+        'afmt': '{{FrontSide}}<hr id="answer">{{Swedish}}{{Swedish_Audio}}',
+        },
+    ])
     
 
-    my_deck = genanki.Deck(
-    2059400110,
-    'Twisted Love Chapter 1 Sentences')
+    my_deck= genanki.Deck(
+    2059400210,
+    'Anki sound deck TWISTED')
+
+    for w in sw:
+        speak = gTTS(text=w, lang='sv', slow=False) 
+        #print("Text to be spoken:", w)
+        if not w[0].isalpha():
+            continue
+        else:
+            speak.save("sounds/"+w+".mp3")
+
+    my_package = genanki.Package(my_deck)
 
     for e, s in zip(eng, sw):
-        my_note = genanki.Note(
-            model = genanki.BASIC_MODEL,
-            fields=[e, s])
-        my_deck.add_note(my_note)
-    print("we are fine hereiojhiojios")
-    genanki.Package(my_deck).write_to_file('sentences/twisted_love_sentences.apkg')
+        if type(e) == float or type(s) == float:
+            continue
+        else:
+            my_note = genanki.Note(
+                model = my_model,
+                fields=[e, s, '[sound:' +s +'.mp3' ']'])
+            my_deck.add_note(my_note)
+    # print(my_deck)
+    warnings.filterwarnings('ignore', module='genanki', message='^Field contained the following invalid HTML tags')
+    
+    
+    
+    my_package = genanki.Package(my_deck)
+
+    file_path = 'sounds/'
+    med = []
+    for file in sw:
+        full_file = file_path + file +".mp3" 
+        #print("file name is: ", full_file)
+        med.append(full_file)
+    
+    #print(med)
+    my_package.media_files = med
+
+
+    try:
+        my_package.write_to_file('sentences/iiiitwisted_love_sentences.apkg')
+    except FileNotFoundError as fe:
+        print(f"file not found when trying to write: '{fe}' ")
+
 
 # --------------------------------------------------
 def main() -> None:
     """ Make a jazz noise here """
+    
 
     #1. import the file - txt 
     file_path = 'twisted_ch1.txt'
-    text_to_words = text_to_word_list(file_path)
+    
     #2. convert the txt to a list based on separator (where the default is ' ')
     words = text_to_word_list(file_path)
     #3. put the word list to csv 
