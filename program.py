@@ -10,26 +10,21 @@ import re
 
 
 
-def text_to_word_list(file_path, sepa = ' '):
-    ch = [',', '.', '"', '”']
+def text_to_word_list(file_path, separator = ' '):
     try:
+        #opens the file for reading
         with open(file_path, 'r') as file:
             text = file.read()
             # Split the text into words using whitespace as separator
-            word_list = text.split(sep = sepa)
-            word_list = [w.lower() for w in word_list]
-            word_list = [w.replace('.', '') for w in word_list]
-            word_list = [w.replace('"', '') for w in word_list]
-            word_list = [w.replace(',', '') for w in word_list]
-            word_list = [w.replace('”', '') for w in word_list]
-            word_list = list(dict.fromkeys(word_list))
-        
-        for word in word_list:
-            is_word = True
-            for letter in word:
-
-
-        
+            word_list = text.split(sep = separator)
+            for n in range(len(word_list)):
+                new_word = re.sub(r"\W", "", word_list[n])
+                word_list[n] = new_word
+            #remove duplicates
+            word_list = [i for i in word_list if i != '']
+            word_list = [word.lower() for word in word_list]
+            word_list = list(dict.fromkeys(word_list))  
+            print([word for word in word_list])      
         return word_list
     except FileNotFoundError:
         print("File not found.")
@@ -40,6 +35,7 @@ def list_to_csv(word_list, output_file):
     try:
         with open(output_file, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
+            #create the header row
             writer.writerow(["Word"])
             for word in word_list:
                 writer.writerow([word])
