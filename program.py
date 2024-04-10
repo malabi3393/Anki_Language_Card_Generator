@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """ Anki Card Generator """
 
 import csv
@@ -9,7 +9,7 @@ import warnings
 from gtts import gTTS 
 import re
 import argparse
-from typing import NamedTuple, TextIO
+from typing import NamedTuple
 
 
 
@@ -51,20 +51,20 @@ def list_to_csv(word_list, output_file):
 
 
 
-def translate_word(word, source_language='sv', target_language='en'):
+def translate_word(word, target_language, native_language = 'en'):
     translator = Translator()
-    translation = translator.translate(word, src=source_language, dest=target_language)
+    translation = translator.translate(word, src=target_language, dest=native_language)
     if translation is not None and translation.text is not None:
         return translation.text
     else:
         print(f"Translation failed for word: {word}")
         return ''  # or return the original word or any other default value
 
-def translate_swedish_words_to_english(source_list) -> list:
+def translate_target_words_to_native(source_list, target, native) -> list:
     translated_list = []
     for word in source_list:
         try:
-            translated_word = translate_word(word, source_language= 'sv', target_language='en')
+            translated_word = translate_word(word, target_language= target, native_language=native)
             translated_list.append(translated_word)
         except Exception as e:
             print(f"Translation failed for word: {word}. Error: {e}")
@@ -78,21 +78,21 @@ def translate_swedish_words_to_english(source_list) -> list:
 
 # --------------------------------------------------
 
-def create_anki_deck(target_list, native_list):
+def create_anki_deck(target_list, native_list, target_lng):
 
     my_model_1 = genanki.Model(
     13110120064,
     'Example',
     fields=[
-        {'name': 'English'},
-        {'name': 'Swedish'},
-        {'name': 'Swedish_Audio'}
+        {'name': 'Native Language'},
+        {'name': 'Target'},
+        {'name': 'Target_Audio'}
     ],
     templates=[
         {
         'name': 'Card 1',
-        'qfmt': '{{English}}',
-        'afmt': '{{FrontSide}}<hr id="answer">{{Swedish}}{{Swedish_Audio}}',
+        'qfmt': '{{Native Language}}',
+        'afmt': '{{FrontSide}}<hr id="answer">{{Target}}{{Target_Audio}}',
         },
     ])
 
@@ -101,7 +101,7 @@ def create_anki_deck(target_list, native_list):
     'HARRY P APR 10 10:57 PM')
 
     for word in target_list:
-        speak = gTTS(text=word, lang='sv', slow=False) 
+        speak = gTTS(text=word, lang=target_lng, slow=False) 
         #print("Text to be spoken:", w)
         if not word[0].isalpha():
             continue
@@ -168,7 +168,7 @@ def create_anki_deck(target_list, native_list):
 
 class Args(NamedTuple):
     """ Command-line arguments """
-    txt: TextIO
+    txt: str
     target_lng: str
     native_lng: str
 
@@ -181,16 +181,17 @@ def get_args() -> Args:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     #because there is no default, then it must have a value
-    parser.add_argument('txt', metavar='FILE', help='Input text file of target language',
-                        type=argparse.FileType('rt'))
-    parser.add_argument('-t',
-                        '--tar',
+    parser.add_argument('txt', metavar='txt', help='Input text file of target language',
+                        type=str)
+    parser.add_argument('target',
+                        metavar='trg',
                         help='The target language (the language of the text file).' \
                         ' Note: must be written in ISO 639 format. For example:\nArabic: ar\n' \
                         'English: en\nSwedish: sv\nMore can be found at https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes',
                         type=str)
     parser.add_argument('-n',
                     '--nat',
+                    metavar='nat',
                     help='The native language (the language that the text file will be translated into).' \
                     ' Note: must be written in ISO 639 format. For example:\nArabic: ar\n' \
                     'English: en\nSwedish: sv\nMore can be found at https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes\n' \
@@ -199,28 +200,38 @@ def get_args() -> Args:
                     default='en')
 
     args = parser.parse_args()
+    print(args)
 
-    if os.path.isfile(args.txt):
-        args.txt = open(args.txt).read().rstrip()
+    # if os.path.isfile(args.txt):
+    #     args.txt = open(args.txt).read().rstrip()
 
-    return Args(args.txt)
+    #the name comes from the metavar
+    return Args(args.txt, args.target, args.nat)
 # --------------------------------------------------
 def main() -> None:
     """ Make a jazz noise here """
     
 
-    #1. import the file - txt 
-    file_path = 'hp_ch1.txt'
+
+    args = get_args()
+    file_path = args.txt
+    target = args.target_lng
+    native = args.native_lng
+
+    print(f'file path = "{file_path}"')
+    print(f'target = "{target}"')
+    print(f'native = "{native}"')
+
     
     #2. convert the txt to a list based on separator (where the default is ' ')
     target_word_list = text_to_word_list(file_path)
     #3. put the word list to csv 
     #4. Translate swed words to engl
-    native_word_list = translate_swedish_words_to_english(target_word_list)
+    native_word_list = translate_target_words_to_native(target_word_list, target, native)
     #5.combine the csv files to one 
     # deck_as_csv = combine_csv(target_word_list, native_word_list)
     #6. Create an anki deck 
-    create_anki_deck(target_word_list, native_word_list)
+    create_anki_deck(target_word_list, native_word_list, target)
         
 
 
