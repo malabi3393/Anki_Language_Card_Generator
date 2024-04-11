@@ -223,14 +223,8 @@ def main() -> None:
     print(f'native = "{native}"')
 
     
-    #2. convert the txt to a list based on separator (where the default is ' ')
     target_word_list = text_to_word_list(file_path)
-    #3. put the word list to csv 
-    #4. Translate swed words to engl
     native_word_list = translate_target_words_to_native(target_word_list, target, native)
-    #5.combine the csv files to one 
-    # deck_as_csv = combine_csv(target_word_list, native_word_list)
-    #6. Create an anki deck 
     create_anki_deck(target_word_list, native_word_list, target)
         
 
