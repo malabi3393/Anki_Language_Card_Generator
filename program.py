@@ -1,4 +1,3 @@
-
 """ Anki Card Generator """
 
 import csv
@@ -10,7 +9,6 @@ from gtts import gTTS
 import re
 import argparse
 from typing import NamedTuple
-
 
 
 def text_to_word_list(file_path, separator = ' ') -> list:
@@ -48,7 +46,6 @@ def list_to_csv(word_list, output_file):
         print(f"List successfully exported to {output_file}")
     except Exception as e:
         print(f"Error occurred while exporting to CSV: {e}")
-
 
 
 def translate_word(word, target_language, native_language = 'en'):
@@ -92,7 +89,7 @@ def create_anki_deck(target_list, native_list, target_lng):
         {
         'name': 'Card 1',
         'qfmt': '{{Native Language}}',
-        'afmt': '{{FrontSide}}<hr id="answer">{{Target}}{{Target_Audio}}',
+        'afmt': '{{FrontSide}}<hr id="answer">{{Target}}<br>{{Target_Audio}}',
         },
     ])
 
@@ -119,7 +116,6 @@ def create_anki_deck(target_list, native_list, target_lng):
         if type(native_word) == float or type(target_word) == float:
             continue
         else:
-            #print(f"i am in create an ki  where native is : {native_word} and target is {target_word}")
             #check to see if the sound file exists
             if os.path.isfile('sounds/'+target_word+'.mp3'):
                 #print (f"YES-{s}.mp3 does exist")
@@ -180,7 +176,7 @@ def get_args() -> Args:
         description='Anki Card Generator',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    #because there is no default, then it must have a value
+    # because there is no default, then it must have a value
     parser.add_argument('txt', metavar='txt', help='Input text file of target language',
                         type=str)
     parser.add_argument('target',
@@ -189,15 +185,20 @@ def get_args() -> Args:
                         ' Note: must be written in ISO 639 format. For example:\nArabic: ar\n' \
                         'English: en\nSwedish: sv\nMore can be found at https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes',
                         type=str)
-    parser.add_argument('-n',
-                    '--nat',
-                    metavar='nat',
-                    help='The native language (the language that the text file will be translated into).' \
-                    ' Note: must be written in ISO 639 format. For example:\nArabic: ar\n' \
-                    'English: en\nSwedish: sv\nMore can be found at https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes\n' \
-                    'Default is English',
-                    type=str,
-                    default='en')
+    parser.add_argument(
+        "-n",
+        "--nat",
+        metavar="nat",
+        help="help='The native language (the language that the text file will be translated into).\n"
+        "Note: must be written in ISO 639 format. For example:\n"
+        "Arabic: ar\n"
+        "English: en\n"
+        "Swedish: sv\n"
+        "More can be found at https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes\n"
+        "Default is English'",
+        type=str,
+        default="en",
+    )
 
     args = parser.parse_args()
     print(args)
@@ -205,7 +206,7 @@ def get_args() -> Args:
     # if os.path.isfile(args.txt):
     #     args.txt = open(args.txt).read().rstrip()
 
-    #the name comes from the metavar
+    # the name comes from the metavar
     return Args(args.txt, args.target, args.nat)
 # --------------------------------------------------
 def main() -> None:
@@ -226,10 +227,8 @@ def main() -> None:
     target_word_list = text_to_word_list(file_path)
     native_word_list = translate_target_words_to_native(target_word_list, target, native)
     create_anki_deck(target_word_list, native_word_list, target)
-        
 
 
 # --------------------------------------------------
 if __name__ == '__main__':
     main()
-
