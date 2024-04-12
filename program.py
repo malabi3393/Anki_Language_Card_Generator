@@ -95,7 +95,7 @@ def create_anki_deck(target_list, native_list, target_lng):
 
     my_deck= genanki.Deck(
     2059454210,
-    'HARRY P APR 10 10:57 PM')
+    'Diary April 11 2024')
 
     for word in target_list:
         speak = gTTS(text=word, lang=target_lng, slow=False) 
@@ -103,7 +103,7 @@ def create_anki_deck(target_list, native_list, target_lng):
         if not word[0].isalpha():
             continue
         else:
-            speak.save("sounds/"+word+".mp3")
+            speak.save("src/"+word+".mp3")
 
     my_package = genanki.Package(my_deck)
 
@@ -117,7 +117,7 @@ def create_anki_deck(target_list, native_list, target_lng):
             continue
         else:
             #check to see if the sound file exists
-            if os.path.isfile('sounds/'+target_word+'.mp3'):
+            if os.path.isfile('src/'+target_word+'.mp3'):
                 #print (f"YES-{s}.mp3 does exist")
                 my_note = genanki.Note(
                     model = my_model_1,
@@ -140,7 +140,7 @@ def create_anki_deck(target_list, native_list, target_lng):
     
     my_package = genanki.Package(my_deck)
 
-    file_path = 'sounds/'
+    file_path = 'src/'
     med = []
     for file in target_list:
         full_file = file_path + file +".mp3"
@@ -156,7 +156,7 @@ def create_anki_deck(target_list, native_list, target_lng):
 
 
     try:
-        my_package.write_to_file('sentences/swe_eng.apkg')
+        my_package.write_to_file('output.apkg')
     except FileNotFoundError as fe:
         print(f"file not found when trying to write: '{fe}' ")
 
