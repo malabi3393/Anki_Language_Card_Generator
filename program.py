@@ -22,13 +22,17 @@ def text_to_word_list(file_path, separator = ' ') -> list:
                 if separator == ' ':
                     new_word = re.sub(r"\W", "", word_list[n])
                 elif separator == '.':
-                    new_word = re.sub(r"^ |[^\w\s]", "", word_list[n])
+                    new_word = re.sub(r"^|[^\w\s]", "", word_list[n])
+                    new_word = re.sub(r"^(?:\s+|\s*\n\s*)", "", new_word)
+                    # print("#################")
+                    # print(new_word)
                 word_list[n] = new_word
             #remove duplicates
             word_list = [i for i in word_list if i != '']
-            word_list = [word.lower() for word in word_list]
+            if separator != '.':
+                word_list = [word.lower() for word in word_list]
             word_list = list(dict.fromkeys(word_list))  
-            #print([word for word in word_list])      
+            print([word for word in word_list])      
         return word_list
     except FileNotFoundError:
         print("File not found.")
@@ -212,7 +216,7 @@ def get_args() -> Args:
         "-s",
         "--sep",
         metavar="SEPARATOR",
-        help="The character by which the text file is delimited. By default, the delimiter is ' '",
+        help="The character by which the text file is delimited. By default, the delimiter is whitespace ' '",
         type=str,
         default=' ',
     )
@@ -239,6 +243,7 @@ def main() -> None:
     print(f'target = "{target}"')
     print(f'native = "{native}"')
     print(f'output = "{output}"')
+    print(f'sep = "{sep}"')
 
     
     target_word_list = text_to_word_list(file_path, sep)
