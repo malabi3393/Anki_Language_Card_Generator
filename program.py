@@ -28,7 +28,7 @@ def text_to_word_list(file_path, separator = ' ') -> list:
             word_list = [i for i in word_list if i != '']
             word_list = [word.lower() for word in word_list]
             word_list = list(dict.fromkeys(word_list))  
-            print([word for word in word_list])      
+            #print([word for word in word_list])      
         return word_list
     except FileNotFoundError:
         print("File not found.")
@@ -75,7 +75,7 @@ def translate_target_words_to_native(source_list, target, native) -> list:
 
 # --------------------------------------------------
 
-def create_anki_deck(target_list, native_list, target_lng):
+def create_anki_deck(target_list, native_list, target_lng, output_filename):
 
     my_model_1 = genanki.Model(
     13110120064,
@@ -95,7 +95,7 @@ def create_anki_deck(target_list, native_list, target_lng):
 
     my_deck= genanki.Deck(
     2059454210,
-    'Diary April 11 2024')
+    output_filename)
 
     for word in target_list:
         speak = gTTS(text=word, lang=target_lng, slow=False) 
@@ -144,10 +144,9 @@ def create_anki_deck(target_list, native_list, target_lng):
     med = []
     for file in target_list:
         full_file = file_path + file +".mp3"
-        if os.path.isfile(full_file): 
-            print("file name is: ", full_file)
+        try:
             med.append(full_file)
-        else:
+        except FileNotFoundError as fe:
             print(f"{full_file} not found")
             continue
     
@@ -156,7 +155,7 @@ def create_anki_deck(target_list, native_list, target_lng):
 
 
     try:
-        my_package.write_to_file('output.apkg')
+        my_package.write_to_file(f"{output_filename}.apkg")
     except FileNotFoundError as fe:
         print(f"file not found when trying to write: '{fe}' ")
 
@@ -167,6 +166,7 @@ class Args(NamedTuple):
     txt: str
     target_lng: str
     native_lng: str
+    output:str
 
 # --------------------------------------------------
 def get_args() -> Args:
@@ -180,7 +180,7 @@ def get_args() -> Args:
     parser.add_argument('txt', metavar='txt', help='Input text file of target language',
                         type=str)
     parser.add_argument('target',
-                        metavar='trg',
+                        metavar='TARGET',
                         help='The target language (the language of the text file).' \
                         ' Note: must be written in ISO 639 format. For example:\nArabic: ar\n' \
                         'English: en\nSwedish: sv\nMore can be found at https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes',
@@ -188,7 +188,7 @@ def get_args() -> Args:
     parser.add_argument(
         "-n",
         "--nat",
-        metavar="nat",
+        metavar="NATIVE",
         help="help='The native language (the language that the text file will be translated into).\n"
         "Note: must be written in ISO 639 format. For example:\n"
         "Arabic: ar\n"
@@ -199,6 +199,14 @@ def get_args() -> Args:
         type=str,
         default="en",
     )
+    parser.add_argument(
+        "-o",
+        "--output",
+        metavar="OUTPUT",
+        help="Name of the output file. Default is output.apkg",
+        type=str,
+        default="output.apkg",
+    )
 
     args = parser.parse_args()
     print(args)
@@ -207,26 +215,25 @@ def get_args() -> Args:
     #     args.txt = open(args.txt).read().rstrip()
 
     # the name comes from the metavar
-    return Args(args.txt, args.target, args.nat)
+    return Args(args.txt, args.target, args.nat, args.output)
 # --------------------------------------------------
 def main() -> None:
-    """ Make a jazz noise here """
-    
-
 
     args = get_args()
     file_path = args.txt
     target = args.target_lng
     native = args.native_lng
+    output = args.output
 
     print(f'file path = "{file_path}"')
     print(f'target = "{target}"')
     print(f'native = "{native}"')
+    print(f'output = "{output}"')
 
     
     target_word_list = text_to_word_list(file_path)
     native_word_list = translate_target_words_to_native(target_word_list, target, native)
-    create_anki_deck(target_word_list, native_word_list, target)
+    create_anki_deck(target_word_list, native_word_list, target, output)
 
 
 # --------------------------------------------------
