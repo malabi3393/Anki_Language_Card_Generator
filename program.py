@@ -167,6 +167,7 @@ class Args(NamedTuple):
     target_lng: str
     native_lng: str
     output:str
+    separator: str
 
 # --------------------------------------------------
 def get_args() -> Args:
@@ -207,6 +208,14 @@ def get_args() -> Args:
         type=str,
         default="output.apkg",
     )
+    parser.add_argument(
+        "-s",
+        "--sep",
+        metavar="SEPARATOR",
+        help="The character by which the text file is delimited. By default, the delimiter is ' '",
+        type=str,
+        default=' ',
+    )
 
     args = parser.parse_args()
     print(args)
@@ -215,7 +224,7 @@ def get_args() -> Args:
     #     args.txt = open(args.txt).read().rstrip()
 
     # the name comes from the metavar
-    return Args(args.txt, args.target, args.nat, args.output)
+    return Args(args.txt, args.target, args.nat, args.output, args.sep)
 # --------------------------------------------------
 def main() -> None:
 
@@ -224,6 +233,7 @@ def main() -> None:
     target = args.target_lng
     native = args.native_lng
     output = args.output
+    sep = args.separator
 
     print(f'file path = "{file_path}"')
     print(f'target = "{target}"')
@@ -231,7 +241,7 @@ def main() -> None:
     print(f'output = "{output}"')
 
     
-    target_word_list = text_to_word_list(file_path)
+    target_word_list = text_to_word_list(file_path, sep)
     native_word_list = translate_target_words_to_native(target_word_list, target, native)
     create_anki_deck(target_word_list, native_word_list, target, output)
 
