@@ -11,28 +11,26 @@ import argparse
 from typing import NamedTuple
 
 
+
+
 def text_to_word_list(file_path, separator = ' ') -> list:
     try:
         #opens the file for reading
         with open(file_path, 'r') as file:
             text = file.read()
+            text = text.replace("\n", " ")
             # Split the text into words using whitespace as separator
             word_list = text.split(sep = separator)
-            for n in range(len(word_list)):
-                if separator == ' ':
-                    new_word = re.sub(r"\W", "", word_list[n])
-                elif separator == '.':
-                    new_word = re.sub(r"^|[^\w\s]", "", word_list[n])
-                    new_word = re.sub(r"^(?:\s+|\s*\n\s*)", "", new_word)
-                    # print("#################")
-                    # print(new_word)
-                word_list[n] = new_word
+            print(word_list)
             #remove duplicates
+            word_list = [re.sub(r"^\s*", "", w) for w in word_list]
+            word_list = [re.sub(r"^\W*", "", w) for w in word_list]
             word_list = [i for i in word_list if i != '']
             if separator != '.':
                 word_list = [word.lower() for word in word_list]
             word_list = list(dict.fromkeys(word_list))  
-            print([word for word in word_list])      
+            print([word for word in word_list]) 
+            print(word_list)     
         return word_list
     except FileNotFoundError:
         print("File not found.")
