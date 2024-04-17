@@ -31,7 +31,6 @@ def text_to_word_list(file_path, separator = ' ') -> list:
             #removes doubles
             word_list = list(set([word for word in word_list]))  
             print([word for word in word_list]) 
-            print(word_list)     
         return word_list
     except FileNotFoundError:
         print("File not found.")
@@ -57,12 +56,8 @@ def translate_word(word, target_language, native_language = 'en'):
     print(translation)
     
     if translation.text is not None:
-        print("bitch")
-        print(type(translation))
         return translation.text
     else:
-        
-        print(f"dwqdTranslation failed for word: {word}")
         return ''  # or return the original word or any other default value
 
 def translate_target_words_to_native(source_list, target, native) -> list:
@@ -141,7 +136,6 @@ def create_anki_deck(target_list, native_list, target_lng, output_filename):
     print(f"{missing} files missing")
             
             
-    # print(my_deck)
     warnings.filterwarnings('ignore', module='genanki', message='^Field contained the following invalid HTML tags')
     
     
@@ -214,7 +208,7 @@ def get_args() -> Args:
         metavar="OUTPUT",
         help="Name of the output file. Default is output.apkg",
         type=str,
-        default="output.apkg",
+        default="output",
     )
     parser.add_argument(
         "-s",
