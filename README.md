@@ -3,6 +3,6 @@ Given a text file in a target language, the script takes each word in the file, 
 Aimed for language learners who want to learn vocabulary in a personal, relevent context. 
 ## Installation
 
-Install relevant modules:
+Required packages are found in the virtual environnment, activate it using:
    ```sh
-   make install
+   source virtual_env/bin/activate
