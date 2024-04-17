@@ -28,7 +28,8 @@ def text_to_word_list(file_path, separator = ' ') -> list:
             word_list = [i for i in word_list if i != '']
             if separator != '.':
                 word_list = [word.lower() for word in word_list]
-            word_list = list(dict.fromkeys(word_list))  
+            #removes doubles
+            word_list = list(set([word for word in word_list]))  
             print([word for word in word_list]) 
             print(word_list)     
         return word_list
@@ -53,10 +54,15 @@ def list_to_csv(word_list, output_file):
 def translate_word(word, target_language, native_language = 'en'):
     translator = Translator()
     translation = translator.translate(word, src=target_language, dest=native_language)
-    if translation is not None and translation.text is not None:
+    print(translation)
+    
+    if translation.text is not None:
+        print("bitch")
+        print(type(translation))
         return translation.text
     else:
-        print(f"Translation failed for word: {word}")
+        
+        print(f"dwqdTranslation failed for word: {word}")
         return ''  # or return the original word or any other default value
 
 def translate_target_words_to_native(source_list, target, native) -> list:
