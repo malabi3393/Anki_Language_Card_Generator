@@ -11,49 +11,77 @@ import argparse
 from typing import NamedTuple
 
 
+Cards = set()
+
+class Card:
+    def __init__(self, source, native = '', audio = '', name = ''):
+        self.source = source
+        self.native = native
+        self.audio = audio
+        self.name = name
+    
+    def set_filename(self, filename):
+        self.name = filename
+        return
+    def get_filename(self):
+        return self.name
+    
+    def translate_word(self, language):
+        translator = Translator()
+        translation = translator.translate(self.source, src=language, dest='en')
+        #print(translation)
+        if translation.text is not None:
+            return translation.text
+        else:
+            return ''  # or return the original word or any other default value
+    def handle_separator(self, sep):
+        match sep:
+            case '.':
+                print('x')
 
 
+    
+    
 def text_to_word_list(file_path, separator = ' ') -> list:
     try:
-        #opens the file for reading
-        with open(file_path, 'r') as file:
-            text = file.read()
-            text = text.replace("\n", " ")
-            # Split the text into words using whitespace as separator
-            word_list = text.split(sep = separator)
-            print(word_list)
-            #remove duplicates
-            word_list = [re.sub(r"^\s*", "", w) for w in word_list]
-            word_list = [re.sub(r"^\W*", "", w) for w in word_list]
-            word_list = [i for i in word_list if i != '']
+        word_list = []
+        if separator == "n":
+            text = open(file_path,'r').read().splitlines()
+            word_list = set(text)
+            #print(word_list)
+        else:
+            with open(file_path, 'r') as file:
+                text = file.read()
+                # Split the text into words using whitespace as separator
+                word_list = text.split(sep = separator)
+        
+            print(len(word_list))
             if separator != '.':
                 word_list = [word.lower() for word in word_list]
             #removes doubles
-            word_list = list(set([word for word in word_list]))  
-            print([word for word in word_list]) 
+            word_list = list(set([word for word in word_list]))
+            #remove duplicates
+            #remove white space character at the beginning of a line 
+        word_list = [(re.sub(r"^\s*", "", w), re.sub(r"^\W*", "", w)) for w in word_list]
+            #removes any non word characters
+        #word_list = [re.sub(r"^\W*", "", w) for w in word_list]
+            #removes empty strings
+        word_list = [i for i in word_list if i != '']
+
+        word_list = list(set([word for word in word_list]))
+        print(len(word_list))
+              
+            #print([word for word in word_list]) 
         return word_list
     except FileNotFoundError:
         print("File not found.")
         return []
 
 
-def list_to_csv(word_list, output_file):
-    try:
-        with open(output_file, 'w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            #create the header row
-            writer.writerow(["Word"])
-            for word in word_list:
-                writer.writerow([word])
-        print(f"List successfully exported to {output_file}")
-    except Exception as e:
-        print(f"Error occurred while exporting to CSV: {e}")
-
-
 def translate_word(word, target_language, native_language = 'en'):
     translator = Translator()
     translation = translator.translate(word, src=target_language, dest=native_language)
-    print(translation)
+    #print(translation)
     
     if translation.text is not None:
         return translation.text
@@ -112,8 +140,6 @@ def create_anki_deck(target_list, native_list, target_lng, output_filename):
 
     missing = 0
 
-    #e = native_word
-    #s = target_word
 
     for native_word, target_word in zip(native_list, target_list):
         if type(native_word) == float or type(target_word) == float:
@@ -121,7 +147,6 @@ def create_anki_deck(target_list, native_list, target_lng, output_filename):
         else:
             #check to see if the sound file exists
             if os.path.isfile('src/'+target_word+'.mp3'):
-                #print (f"YES-{s}.mp3 does exist")
                 my_note = genanki.Note(
                     model = my_model_1,
                     fields=[native_word, target_word, '[sound:' +target_word +'.mp3' ']'])
@@ -152,7 +177,6 @@ def create_anki_deck(target_list, native_list, target_lng, output_filename):
             print(f"{full_file} not found")
             continue
     
-    #print(med)
     my_package.media_files = med
 
 
@@ -222,20 +246,12 @@ def get_args() -> Args:
     args = parser.parse_args()
     print(args)
 
-    # if os.path.isfile(args.txt):
-    #     args.txt = open(args.txt).read().rstrip()
-
-    # the name comes from the metavar
     return Args(args.txt, args.target, args.nat, args.output, args.sep)
 # --------------------------------------------------
 def main() -> None:
 
     args = get_args()
-    file_path = args.txt
-    target = args.target_lng
-    native = args.native_lng
-    output = args.output
-    sep = args.separator
+    file_path, target, native, output, sep = args
 
     print(f'file path = "{file_path}"')
     print(f'target = "{target}"')
@@ -244,6 +260,7 @@ def main() -> None:
     print(f'sep = "{sep}"')
 
     
+
     target_word_list = text_to_word_list(file_path, sep)
     native_word_list = translate_target_words_to_native(target_word_list, target, native)
     create_anki_deck(target_word_list, native_word_list, target, output)

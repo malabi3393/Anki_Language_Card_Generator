@@ -1,4 +1,4 @@
-#!/Users/mariam/dev/translate/virtual_env/bin/python
+#!/Users/mariam/dev/translate/virtual_env/bin/python3.11
 # -*- coding: utf-8 -*-
 import argparse
 import sys
