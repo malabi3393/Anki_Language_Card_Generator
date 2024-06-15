@@ -1,6 +1,5 @@
 """ Anki Card Generator """
 
-import csv
 from googletrans import Translator
 import genanki 
 import os.path
@@ -9,6 +8,8 @@ from gtts import gTTS
 import re
 import argparse
 from typing import NamedTuple
+import time
+import random
 
 
 Cards = set()
@@ -34,13 +35,11 @@ class Card:
             return translation.text
         else:
             return ''  # or return the original word or any other default value
-    def handle_separator(self, sep):
-        match sep:
-            case '.':
-                print('x')
+    # def handle_separator(self, sep):
+    #     match sep:
+    #         case '.':
+    #             print('x')
 
-
-    
     
 def text_to_word_list(file_path, separator = ' ') -> list:
     try:
@@ -62,11 +61,14 @@ def text_to_word_list(file_path, separator = ' ') -> list:
             word_list = list(set([word for word in word_list]))
             #remove duplicates
             #remove white space character at the beginning of a line 
-        word_list = [(re.sub(r"^\s*", "", w), re.sub(r"^\W*", "", w)) for w in word_list]
+        #word_list = [re.sub(r"[^\\p{IsPunctuation}]", "", w) for w in word_list]
+        word_list = [re.sub(r"^\s*", "", w) for w in word_list]
+        word_list = [re.sub(r"^\W*", "", w) for w in word_list]
             #removes any non word characters
         #word_list = [re.sub(r"^\W*", "", w) for w in word_list]
             #removes empty strings
         word_list = [i for i in word_list if i != '']
+
 
         word_list = list(set([word for word in word_list]))
         print(len(word_list))
@@ -99,6 +101,7 @@ def translate_target_words_to_native(source_list, target, native) -> list:
             translated_list.append('')  # Append an empty string as translation
     try:
         print(f"Translations successfully exported to list")
+        print(translated_list)
         return translated_list
     except Exception as e:
         print("Error in translating your list. An empty list is returned.")
@@ -108,8 +111,11 @@ def translate_target_words_to_native(source_list, target, native) -> list:
 
 def create_anki_deck(target_list, native_list, target_lng, output_filename):
 
+    
+    r1 = random.randint(10, 1000000)
+    r2 = random.randint(10, 1000000)
     my_model_1 = genanki.Model(
-    13110120064,
+    r1,
     'Example',
     fields=[
         {'name': 'Native Language'},
@@ -124,19 +130,40 @@ def create_anki_deck(target_list, native_list, target_lng, output_filename):
         },
     ])
 
+    my_model_reversed = genanki.Model(
+    r2,
+    'Reversed',
+    fields=[
+        {'name': 'Target'},
+        {'name': 'Target_Audio'},
+        {'name': 'Native Language'}
+    ],
+    templates=[
+        {
+        'name': 'Card 1',
+        'qfmt': '{{Target}} <br> {{Target_Audio}}',
+        'afmt': '{{FrontSide}}<hr id="answer">{{Native Language}}',
+        },
+    ])
+
     my_deck= genanki.Deck(
-    2059454210,
+    r2+1,
     output_filename)
+
+    my_deck_2= genanki.Deck(
+        r2+2,
+        f"{output_filename}_reversed")
 
     for word in target_list:
         speak = gTTS(text=word, lang=target_lng, slow=False) 
-        #print("Text to be spoken:", w)
+        print("Text to be spoken:", word)
         if not word[0].isalpha():
             continue
         else:
             speak.save("src/"+word+".mp3")
 
     my_package = genanki.Package(my_deck)
+    my_package2 = genanki.Package(my_deck_2)
 
     missing = 0
 
@@ -150,14 +177,15 @@ def create_anki_deck(target_list, native_list, target_lng, output_filename):
                 my_note = genanki.Note(
                     model = my_model_1,
                     fields=[native_word, target_word, '[sound:' +target_word +'.mp3' ']'])
+                my_note2 = genanki.Note(
+                    model = my_model_reversed,
+                    fields=[target_word, '[sound:' +target_word +'.mp3' ']', native_word])
                 my_deck.add_note(my_note)
+                my_deck_2.add_note(my_note2)
             else:
                 print (f"NO-{target_word}.mp3 does NOT exist")
                 missing += 1
-                my_note = genanki.Note(
-                    model = my_model_1,
-                    fields=[native_word, target_word, 'audio does not exist'])
-                my_deck.add_note(my_note)
+                continue
     print(f"{missing} files missing")
             
             
@@ -166,22 +194,26 @@ def create_anki_deck(target_list, native_list, target_lng, output_filename):
     
     
     my_package = genanki.Package(my_deck)
+    my_package2 = genanki.Package(my_deck_2)
 
     file_path = 'src/'
     med = []
     for file in target_list:
         full_file = file_path + file +".mp3"
-        try:
-            med.append(full_file)
-        except FileNotFoundError as fe:
-            print(f"{full_file} not found")
-            continue
+        if os.path.isfile(full_file):
+            try:
+                med.append(full_file)
+            except FileNotFoundError as fe:
+                print(f"{full_file} not found")
+                continue
     
     my_package.media_files = med
+    my_package2.media_files = med
 
 
     try:
         my_package.write_to_file(f"{output_filename}.apkg")
+        my_package2.write_to_file(f"{output_filename}_reversed.apkg")
     except FileNotFoundError as fe:
         print(f"file not found when trying to write: '{fe}' ")
 
