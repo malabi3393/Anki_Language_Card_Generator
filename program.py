@@ -10,6 +10,7 @@ import argparse
 from typing import NamedTuple
 import time
 import random
+import parser
 
 
 Cards = set()
@@ -41,40 +42,11 @@ class Card:
     #             print('x')
 
     
-def text_to_word_list(file_path, separator = ' ') -> list:
+def text_to_word_list(file_path, separator = ' '):
     try:
-        word_list = []
-        if separator == "n":
-            text = open(file_path,'r').read().splitlines()
-            word_list = set(text)
-            #print(word_list)
-        else:
-            with open(file_path, 'r') as file:
-                text = file.read()
-                # Split the text into words using whitespace as separator
-                word_list = text.split(sep = separator)
-        
-            print(len(word_list))
-            if separator != '.':
-                word_list = [word.lower() for word in word_list]
-            #removes doubles
-            word_list = list(set([word for word in word_list]))
-            #remove duplicates
-            #remove white space character at the beginning of a line 
-        #word_list = [re.sub(r"[^\\p{IsPunctuation}]", "", w) for w in word_list]
-        word_list = [re.sub(r"^\s*", "", w) for w in word_list]
-        word_list = [re.sub(r"^\W*", "", w) for w in word_list]
-            #removes any non word characters
-        #word_list = [re.sub(r"^\W*", "", w) for w in word_list]
-            #removes empty strings
-        word_list = [i for i in word_list if i != '']
-
-
-        word_list = list(set([word for word in word_list]))
-        print(len(word_list))
-              
-            #print([word for word in word_list]) 
+        word_list = parser.perform_split(file_path, separator)
         return word_list
+  
     except FileNotFoundError:
         print("File not found.")
         return []
@@ -125,8 +97,8 @@ def create_anki_deck(target_list, native_list, target_lng, output_filename):
     templates=[
         {
         'name': 'Card 1',
-        'qfmt': '{{Native Language}}',
-        'afmt': '{{FrontSide}}<hr id="answer">{{Target}}<br>{{Target_Audio}}',
+        'qfmt': '<span style="font-size: 40px;">{{Native Language}}',
+        'afmt': '<span style="font-size: 40px;">{{FrontSide}}<hr id="answer">{{Target}}<br>{{Target_Audio}}',
         },
     ])
 
@@ -141,8 +113,8 @@ def create_anki_deck(target_list, native_list, target_lng, output_filename):
     templates=[
         {
         'name': 'Card 1',
-        'qfmt': '{{Target}} <br> {{Target_Audio}}',
-        'afmt': '{{FrontSide}}<hr id="answer">{{Native Language}}',
+        'qfmt': '<span style="font-size: 40px;">{{Target}} <br> {{Target_Audio}}',
+        'afmt': '<span style="font-size: 40px;">{{FrontSide}}<hr id="answer">{{Native Language}}',
         },
     ])
 
@@ -238,6 +210,12 @@ def get_args() -> Args:
     # because there is no default, then it must have a value
     parser.add_argument('txt', metavar='txt', help='Input text file of target language',
                         type=str)
+    #--- CHANGE TO THIS---#
+    # parser.add_argument('file',
+    #                     metavar='FILE', 
+    #                     help='Input text file(s)',
+    #                     nargs = '+',
+    #                     type=argparse.FileType('rt'))
     parser.add_argument('target',
                         metavar='TARGET',
                         help='The target language (the language of the text file).' \
